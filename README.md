@@ -21,6 +21,9 @@ Then, open the index.html file on your browser to run the application.
 
 Write your code in the src/index.js file. The base URL for your API will be
    http://localhost:3000.
+
+   ## live link
+   https://viktor-kangi.github.io/WK3-phase1-codeChallenge/
    
 ## Core Deliverables
 As a user, I can:
