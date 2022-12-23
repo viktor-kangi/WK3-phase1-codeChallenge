@@ -1,88 +1,96 @@
-const url = "http://localhost:3000/films"
+document.addEventListener('DOMContentLoaded', moviesLoaded)
 
-fetch("http://localhost:3000/films")
-            .then(res=>res.json())
-            .then(json=>console.log(json))
 
-const filmList = document.getElementById('films')
-const filmInfo = document.getElementById('showing')
-let data = ''
-let infoData = ''
-const poster = document.getElementById('poster')
+  //fetches all movie details upon page load
+  function moviesLoaded(){
 
-document.addEventListener('DOMContentLoaded', () => {
-    getFilms()
-})
+    const listMovies = document.getElementById('films')
 
-function getFilms(){
-    fetch(url).then(res => res.json())
-    .then(films => {
-        films.forEach(film => {
-            showFilmName(film)
-        });
+    const movieContainer = document.getElementById('movieContainer')
+
+    const posterDiv = document.getElementById('posterDiv')
+
+    fetch('https://dancun616.github.io/db.json')
+    .then(resp => resp.json())
+    .then(data => createMovieDetailCard(data.films[0], movieContainer))
+
+
+    fetch('https://dancun616.github.io/db.json')
+    .then(resp => resp.json())
+    .then(data => {
+        
+        (data.films).forEach(movie => {
+            const liMovie = document.createElement('li')
+            liMovie.style.cursor = 'pointer'
+
+            const pTitle = document.createElement('p')
+            pTitle.innerText = movie.title
+            liMovie.appendChild(pTitle)
+            listMovies.appendChild(liMovie)
+
+            liMovie.addEventListener('click', () => {
+                movieContainer.innerHTML = ''
+                createMovieDetailCard(movie, movieContainer)
+            })
+        })
     })
 }
 
-function showFilmName(film){
-    const li = document.createElement('li')
-    li.className = "film item"
-    li.innerHTML = film.title
-    filmList.appendChild(li)
+/**
+* createMovieDetailsCard : Creates a movie detail card for movie.
+*   
+*   @data: fetch request response for individual movie
+**/
+function createMovieDetailCard(data, tagToAppend) {
+    const poster = document.createElement('img')
+        poster.src = data.poster
 
-    li.addEventListener('click', () => {
-      filmDetails(film)
-    })
+        tagToAppend.appendChild(poster)
 
-    function clickName(){
-      return li.click()
-    }
+        const title = document.createElement('h2')
+        title.innerText = data.title
+        tagToAppend.appendChild(title)
 
-    window.onload = setTimeout(clickName(), 1000)
+        const runtime = document.createElement( 'p')
+        runtime.innerHTML = `<b>Run time:</b> ${data.runtime}`
+        tagToAppend.appendChild(runtime)
+
+        const showtime = document.createElement( 'p')
+        showtime.innerHTML = `<b>Show time:</b> ${data.showtime}
+        <p><b>Available Tickets</b></p>`
+        tagToAppend.appendChild(showtime)
+
+////Calculate available movie tickets
+        const capacity = data.capacity
+        const titcketsSold = data.tickets_sold
+        let remainingTickets = capacity - titcketsSold
+
+        const availableTickets = document.createElement('p')
+        availableTickets.innerText =  remainingTickets
+        tagToAppend.appendChild(availableTickets)
+
+        const description = document.createElement( 'p')
+        description.innerText = data.description
+        tagToAppend.appendChild(description)
+
+
+        const buyTicketBtn = document.createElement('button')
+        buyTicketBtn.innerText = 'BUY TICKET'
+        buyTicketBtn.addEventListener('click',() => {
+            if(remainingTickets > 1){
+                remainingTickets--
+               availableTickets.innerText =  remainingTickets
+            }else{
+                availableTickets.innerText = 0
+                buyTicketBtn.disabled = true
+                buyTicketBtn.innerText = 'SOLD OUT'
+                buyTicketBtn.style.cursor = 'not-allowed'
+                buyTicketBtn.style.backgroundColor = 'grey'
+            }
+
+            
+
+        })
+        tagToAppend.appendChild(buyTicketBtn)
+
 }
-
-function filmDetails(film){
-  poster.src = film.poster
-  infoData = `
-  <div class="card">
-          <div id="title" class="title">${film.title}</div>
-          <div id="runtime" class="meta">${film.runtime} minutes</div>
-          <div class="content">
-            <div class="description">
-              <div id="film-info">${film.description}</div>
-              <span id="showtime" class="ui label">${film.showtime}</span>
-              <span id="ticket-num">${film.tickets_sold}</span> remaining tickets
-            </div>
-          </div>
-          <div class="extra content">
-            <button id="buy-ticket" class="ui orange button">
-              Buy Ticket
-            </button>
-          </div>
-        </div>
-  `
-  filmInfo.innerHTML = infoData
-  let buyBtn = document.getElementById('buy-ticket')
-  buyBtn.addEventListener('click', () => {
-    buyTicket(film)
-  })
-}
-
-function buyTicket(film){
-  if (film.tickets_sold == 0) {
-    return false
-  }
-  --film.tickets_sold
-  UpdateTickets(film)
-}
-
-
-function UpdateTickets(film){
-  fetch(url + `${film.id}`, {method: 'PATCH', headers: {
-    'Content-type': 'application/json'
- },
-  body: JSON.stringify(film)
-  }).then(res => res.json())
-  .then(film => filmDetails(film))
-}
-
-
